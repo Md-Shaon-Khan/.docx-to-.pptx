@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Word to PowerPoint Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-file-powerpoint"></i> Word to PowerPoint Converter</h1>
+            <p class="subtitle">Upload a Word document to automatically generate a PowerPoint presentation</p>
+        </header>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <main>
+            <div class="upload-section">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    <div class="file-input-container">
+                        <input type="file" name="word_file" id="word_file" accept=".docx" required hidden>
+                        <label for="word_file" class="file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span class="file-text">Choose a Word document (.docx)</span>
+                            <span class="file-browse">Browse</span>
+                        </label>
+                        <div class="file-info" id="fileInfo">No file chosen</div>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <button type="submit" class="btn-convert" id="convertBtn">
+                            <i class="fas fa-magic"></i> Convert to PowerPoint
+                        </button>
+                        <div class="file-requirements">
+                            <i class="fas fa-info-circle"></i> Max file size: 16MB
+                        </div>
+                    </div>
+                </form>
+
+                <div class="loading" id="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing your document... This may take a minute.</p>
+                </div>
+            </div>
+
+            {% if previews %}
+            <div class="results-section">
+                <h2><i class="fas fa-images"></i> Slide Previews</h2>
+                <p class="results-count">{{ previews|length }} slides generated</p>
+                
+                <div class="previews-grid">
+                    {% for preview in previews %}
+                    <div class="preview-item">
+                        <div class="preview-card">
+                            <img src="{{ url_for('preview_file', filename=preview) }}" 
+                                 alt="Slide {{ loop.index }}" 
+                                 class="preview-image"
+                                 loading="lazy">
+                            <div class="slide-number">Slide {{ loop.index }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="download-section">
+                    <a href="{{ url_for('download_file', filename=ppt_file) }}" class="btn-download">
+                        <i class="fas fa-download"></i> Download PowerPoint (.pptx)
+                    </a>
+                    <p class="download-note">
+                        <i class="fas fa-lightbulb"></i> The presentation includes AI-generated summaries and relevant images.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>Word to PowerPoint Converter v1.0</p>
+            <p class="footer-note">
+                <i class="fas fa-exclamation-triangle"></i> 
+                Note: This tool uses AI for content summarization and image selection.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // File input handling
+        document.getElementById('word_file').addEventListener('change', function(e) {
+            const fileInfo = document.getElementById('fileInfo');
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2); // Convert to MB
+                fileInfo.textContent = `${file.name} (${fileSize} MB)`;
+                fileInfo.className = 'file-info has-file';
+            } else {
+                fileInfo.textContent = 'No file chosen';
+                fileInfo.className = 'file-info';
+            }
+        });
+
+        // Form submission with loading indicator
+        document.getElementById('uploadForm').addEventListener('submit', function() {
+            const convertBtn = document.getElementById('convertBtn');
+            const loading = document.getElementById('loading');
+            
+            convertBtn.disabled = true;
+            convertBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            loading.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
